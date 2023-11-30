@@ -34,15 +34,15 @@ async function run() {
     await client.connect();
 
 
-    const menucollection = client.db('people_pulseDB').collection('menu');
+   
+    const workcollection = client.db('people_pulseDB').collection('worksheet');
     const reviewscollection = client.db('people_pulseDB').collection('reviews');
-    const cartcollection = client.db('people_pulseDB').collection('carts');
- 
+    const contactinfocollection = client.db('people_pulseDB').collection('contactinfo');
     // user infocollections
     const usercollection = client.db('people_pulseDB').collection('users');
-
     // payment
     const paymentCollection = client.db('people_pulseDB').collection('payments');
+    const paymentHistoryCollection = client.db('people_pulseDB').collection('paymentshistory');
 
 
     // :::JWT :::::
@@ -122,15 +122,17 @@ async function run() {
     })
 
     // get user
-    app.get('/users',verifyToken,verifyHr,async(req,res)=>{
+    app.get('/users',verifyToken,async(req,res)=>{
       console.log(req.headers);
 
       const result = await usercollection.find().toArray();
       res.send(result);
     })
 
+   
+
     // Get user by ID
-app.get('/users/:id', verifyToken, verifyHr, verifyAdmin, async (req, res) => {
+app.get('/users/:id', async (req, res) => {
   const userId = req.params.id; // Extract the user ID from the request URL
 
   try {
@@ -225,7 +227,7 @@ app.get('/users/:id', verifyToken, verifyHr, verifyAdmin, async (req, res) => {
 
     const updatedDoc= {
       $set:{
-        role:'admin'
+        role:'hr'
 
       }
     }
@@ -262,7 +264,15 @@ app.get('/users/:id', verifyToken, verifyHr, verifyAdmin, async (req, res) => {
       res.send(result);
     })
 
+    // post contact info
+    app.post('/contact-us', async (req, res) => {
 
+      const contactinfo = req.body;
+      console.log(contactinfo);
+      const result = await contactinfocollection.insertOne(contactinfo);
+      res.send(result);
+
+    })
 
 
     // :::user Dashboard::::
@@ -270,31 +280,58 @@ app.get('/users/:id', verifyToken, verifyHr, verifyAdmin, async (req, res) => {
 
     //carts collection create
 
-    app.post('/carts', async (req, res) => {
+    app.post('/worksheet', async (req, res) => {
 
-      const cartItems = req.body;
-      const result = await cartcollection.insertOne(cartItems);
+      const workItems = req.body;
+      console.log(workItems);
+      const result = await workcollection.insertOne(workItems);
       res.send(result);
 
     })
 
     // get specifi user data
 
-    app.get('/carts', async (req, res) => {
+    app.get('/worksheet', async (req, res) => {
 
       const email = req.query.email;
       const query = { email: email };
 
-      const result = await cartcollection.find(query).toArray();
+      const result = await workcollection.find(query).toArray();
       res.send(result)
 
     })
+
     //delete item
-    app.delete('/carts/:id', async (req, res) => {
+    app.delete('/worksheet/:id', async (req, res) => {
 
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
-      const result = await cartcollection.deleteOne(query)
+      const result = await workcollection.deleteOne(query)
+      res.send(result)
+
+    })
+
+
+
+    // ::::add payment history in database::::
+
+    app.post('/paymenthistory', async (req, res) => {
+
+      const payments = req.body;
+      console.log(payments);
+      const result = await paymentHistoryCollection.insertOne(payments);
+      res.send(result);
+
+    })
+
+    // get specifi user data
+
+    app.get('/paymenthistory', async (req, res) => {
+
+      const email = req.query.email;
+      const query = { email: email };
+
+      const result = await paymentHistoryCollection.find(query).toArray();
       res.send(result)
 
     })
